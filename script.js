@@ -8,10 +8,15 @@ https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json
 4. Створити фільтр на поточній сорінці 
 5. Зберегти в об´єкт 
 */
-let data = [];
-const tableBody = document.querySelector('#currencyTable tbody');
 
-function drawTable(data){
+const currencyData = 'https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json';
+const tableBody = document.querySelector('#currencyTable tbody');
+const inputValue = document.querySelector('.input-search');
+const errorText = 'Щось пішло не так:';
+
+let data = [];
+
+function renderCurrencyTable(data){
     tableBody.innerHTML = "";
 
     data.forEach(currency=>{
@@ -26,32 +31,35 @@ function drawTable(data){
     });
 }
 
-async function exchangeRate() {
+async function loadCurrencyData() {
     try {
-        const response = await fetch('https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json');
+        const response = await fetch(currencyData);
         if (!response.ok) {
             throw new Error(`Error: ${response.status} `);
         }
-        console.log(response.headers);
+        
+        
         data = await response.json();
-
-        drawTable(data);
+        renderCurrencyTable(data);
 
     }catch(error){
-        console.log('Щось пішло не так:', error.message);
+        console.log(errorText, error.message);
         
     }
 }
 
-const inputValue = document.querySelector('.input-search');
-inputValue.addEventListener("keyup", filterTable);
 
-function filterTable(e){
-    let filtered = data;
-    if(e.currentTarget.value != ""){
-        filtered = data.filter((currency)=> currency.cc.toLowerCase().startsWith(e.currentTarget.value));
-   }
-   drawTable(filtered);
+
+function filterTable(){
+    const searchText =inputValue.value.trim().toLowerCase();
+
+    let filtered = data.filter(currency=>
+        currency.cc.toLowerCase().includes(searchText) ||
+        currency.txt.toLowerCase().includes(searchText)
+    );
+   
+    renderCurrencyTable(filtered);
 
 }
-exchangeRate();
+inputValue.addEventListener("input", filterTable);
+loadCurrencyData();
